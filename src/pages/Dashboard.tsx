@@ -120,7 +120,7 @@ export default function Dashboard() {
       const existingCount = existingQuotas?.length || 0;
 
       if (existingCount > 0 && existingCount >= (fracoes?.length || 0)) {
-        toast.error(`As quotas de ${mesLabel} já foram geradas para ${existingCount} fracções.`);
+        toast.error(`As quotas de ${mesLabel} já foram geradas para ${existingCount} frações.`);
         return;
       }
 
@@ -146,7 +146,7 @@ export default function Dashboard() {
         })) || [];
 
       if (newQuotas.length === 0) {
-        toast.error(`As quotas de ${mesLabel} já foram geradas para ${existingCount} fracções.`);
+        toast.error(`As quotas de ${mesLabel} já foram geradas para ${existingCount} frações.`);
         return;
       }
 
@@ -179,7 +179,7 @@ export default function Dashboard() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Painel</h1>
         <p className="text-gray-500 mt-1">Visão geral do condomínio</p>
       </div>
 
@@ -188,7 +188,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Fracções Activas</p>
+                <p className="text-sm font-medium text-gray-500">Frações Ativas</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats?.totalFracoesAtivas || 0}
                 </p>
@@ -255,7 +255,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Fracções com Crédito</p>
+                <p className="text-sm font-medium text-gray-500">Frações com Crédito</p>
                 <p className="text-3xl font-bold text-purple-600 mt-1">
                   {stats?.fracoesComCredito || 0}
                 </p>
@@ -301,7 +301,7 @@ export default function Dashboard() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Gerar Quotas do Mês</h3>
                 <p className="text-sm text-gray-500">
-                  Criar quotas mensais para todas as fracções activas
+                  Criar quotas mensais para todas as frações ativas
                 </p>
               </div>
             </div>

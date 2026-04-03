@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/', icon: Home, label: 'Dashboard' },
-  { to: '/fracoes', icon: Building2, label: 'Fracções' },
+  { to: '/', icon: Home, label: 'Painel' },
+  { to: '/fracoes', icon: Building2, label: 'Frações' },
   { to: '/quotas-mensais', icon: Wallet, label: 'Quotas Mensais' },
   { to: '/quotas-extraordinarias', icon: Zap, label: 'Quotas Extraordinárias' },
   { to: '/pagamentos', icon: CreditCard, label: 'Pagamentos' },
@@ -28,7 +28,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 h-screen w-64 bg-[#1e40af] text-white flex flex-col z-50">
       <div className="p-6 border-b border-blue-700">
         <h1 className="text-2xl font-bold tracking-tight">Quotalis</h1>
-        <p className="text-blue-200 text-sm mt-1">Gestao de Condominios</p>
+        <p className="text-blue-200 text-sm mt-1">Gestão de Condomínios</p>
       </div>
       <nav className="flex-1 py-4 overflow-y-auto">
         {navItems.map((item) => (
