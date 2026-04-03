@@ -104,7 +104,7 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
   }
 
   function getCellColor(value: number, expected: number, isIsento: boolean): string {
-    if (isIsento) return 'bg-gray-100';
+    if (isIsento) return 'bg-gray-200';
     if (value >= expected) return 'bg-green-100';
     if (value > 0) return 'bg-yellow-100';
     if (expected > 0) return 'bg-red-100';
@@ -322,7 +322,7 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
           <span>Em atraso</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
+          <div className="w-4 h-4 bg-gray-200 border border-gray-400 rounded"></div>
           <span>Isento</span>
         </div>
       </div>

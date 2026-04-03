@@ -70,7 +70,8 @@ export default function Dashboard() {
       const mesesComQuotasSet = new Set<string>();
       quotas.forEach(q => {
         if (q.mes) {
-          mesesComQuotasSet.add(q.mes);
+          const mesNormalized = q.mes.split('T')[0];
+          mesesComQuotasSet.add(mesNormalized);
         }
       });
       const mesesComQuotas = Array.from(mesesComQuotasSet).sort();
@@ -97,6 +98,7 @@ export default function Dashboard() {
     try {
       const [year, month] = selectedMonth.split('-').map(Number);
       const mesDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+      const mesLabel = `${MONTHS_PT[month - 1]} ${year}`;
 
       const { data: fracoes, error: fracoesError } = await supabase
         .from('fracoes')
@@ -113,6 +115,12 @@ export default function Dashboard() {
       if (quotasError) throw quotasError;
 
       const existingFracaoIds = new Set(existingQuotas?.map(q => q.id_fracao) || []);
+      const existingCount = existingQuotas?.length || 0;
+
+      if (existingCount > 0 && existingCount >= (fracoes?.length || 0)) {
+        toast.error(`As quotas de ${mesLabel} ja foram geradas para ${existingCount} fraccoes.`);
+        return;
+      }
 
       const { data: administradores, error: adminError } = await supabase
         .from('administradores')
@@ -136,7 +144,7 @@ export default function Dashboard() {
         })) || [];
 
       if (newQuotas.length === 0) {
-        toast('Quotas já existem para este mês', { icon: 'i' });
+        toast.error(`As quotas de ${mesLabel} ja foram geradas para ${existingCount} fraccoes.`);
         return;
       }
 
