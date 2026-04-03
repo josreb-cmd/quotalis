@@ -70,8 +70,10 @@ export default function Dashboard() {
       const mesesComQuotasSet = new Set<string>();
       quotas.forEach(q => {
         if (q.mes) {
-          const mesNormalized = q.mes.split('T')[0];
-          mesesComQuotasSet.add(mesNormalized);
+          const dateStr = q.mes.split('T')[0];
+          const [year, month] = dateStr.split('-');
+          const mesKey = `${year}-${month}`;
+          mesesComQuotasSet.add(mesKey);
         }
       });
       const mesesComQuotas = Array.from(mesesComQuotasSet).sort();
@@ -118,7 +120,7 @@ export default function Dashboard() {
       const existingCount = existingQuotas?.length || 0;
 
       if (existingCount > 0 && existingCount >= (fracoes?.length || 0)) {
-        toast.error(`As quotas de ${mesLabel} ja foram geradas para ${existingCount} fraccoes.`);
+        toast.error(`As quotas de ${mesLabel} já foram geradas para ${existingCount} fracções.`);
         return;
       }
 
@@ -144,7 +146,7 @@ export default function Dashboard() {
         })) || [];
 
       if (newQuotas.length === 0) {
-        toast.error(`As quotas de ${mesLabel} ja foram geradas para ${existingCount} fraccoes.`);
+        toast.error(`As quotas de ${mesLabel} já foram geradas para ${existingCount} fracções.`);
         return;
       }
 
@@ -178,7 +180,7 @@ export default function Dashboard() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Visao geral do condominio</p>
+        <p className="text-gray-500 mt-1">Visão geral do condomínio</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -186,7 +188,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Fraccoes Activas</p>
+                <p className="text-sm font-medium text-gray-500">Fracções Activas</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats?.totalFracoesAtivas || 0}
                 </p>
@@ -221,7 +223,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Cobrado Este Mes</p>
+                <p className="text-sm font-medium text-gray-500">Cobrado Este Mês</p>
                 <p className="text-3xl font-bold text-green-600 mt-1">
                   {formatCurrency(stats?.cobradoEsteMes || 0)}
                 </p>
@@ -237,7 +239,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Por Cobrar Este Mes</p>
+                <p className="text-sm font-medium text-gray-500">Por Cobrar Este Mês</p>
                 <p className="text-3xl font-bold text-orange-600 mt-1">
                   {formatCurrency(stats?.porCobrarEsteMes || 0)}
                 </p>
@@ -253,7 +255,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Fraccoes com Credito</p>
+                <p className="text-sm font-medium text-gray-500">Fracções com Crédito</p>
                 <p className="text-3xl font-bold text-purple-600 mt-1">
                   {stats?.fracoesComCredito || 0}
                 </p>
@@ -297,9 +299,9 @@ export default function Dashboard() {
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Gerar Quotas do Mes</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Gerar Quotas do Mês</h3>
                 <p className="text-sm text-gray-500">
-                  Criar quotas mensais para todas as fracoes activas
+                  Criar quotas mensais para todas as fracções activas
                 </p>
               </div>
             </div>
@@ -332,19 +334,19 @@ export default function Dashboard() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Quotas Geradas</h3>
               <p className="text-sm text-gray-500">
-                Meses para os quais ja foram geradas quotas
+                Meses para os quais já foram geradas quotas
               </p>
             </div>
           </div>
           {stats?.mesesComQuotas && stats.mesesComQuotas.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {stats.mesesComQuotas.map((mes) => {
-                const date = new Date(mes);
-                const monthName = MONTHS_PT[date.getMonth()];
-                const year = date.getFullYear();
+              {stats.mesesComQuotas.map((mesKey) => {
+                const [year, month] = mesKey.split('-');
+                const monthIndex = parseInt(month, 10) - 1;
+                const monthName = MONTHS_PT[monthIndex];
                 return (
                   <span
-                    key={mes}
+                    key={mesKey}
                     className="px-3 py-1.5 bg-green-50 text-green-700 text-sm font-medium rounded-lg border border-green-200"
                   >
                     {monthName} {year}

@@ -13,14 +13,14 @@ import {
 
 const navItems = [
   { to: '/', icon: Home, label: 'Dashboard' },
-  { to: '/fracoes', icon: Building2, label: 'Fraccoes' },
+  { to: '/fracoes', icon: Building2, label: 'Fracções' },
   { to: '/quotas-mensais', icon: Wallet, label: 'Quotas Mensais' },
-  { to: '/quotas-extraordinarias', icon: Zap, label: 'Quotas Extraordinarias' },
+  { to: '/quotas-extraordinarias', icon: Zap, label: 'Quotas Extraordinárias' },
   { to: '/pagamentos', icon: CreditCard, label: 'Pagamentos' },
   { to: '/despesas', icon: Receipt, label: 'Despesas' },
   { to: '/administradores', icon: UserCog, label: 'Administradores' },
-  { to: '/relatorios', icon: BarChart3, label: 'Relatorios' },
-  { to: '/configuracoes', icon: Settings, label: 'Configuracoes' },
+  { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
+  { to: '/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 
 export default function Sidebar() {
