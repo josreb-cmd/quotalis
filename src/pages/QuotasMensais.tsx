@@ -286,7 +286,7 @@ export default function QuotasMensais() {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-            {['Pago', 'Pendente', 'Parcial', 'Atraso', 'Atraso Parcial', 'Isento', 'Credito'].map(estado => (
+            {['Pago', 'Pendente', 'Parcial', 'Atraso', 'Atraso Parcial', 'Isento', 'Crédito'].map(estado => (
               <button
                 key={estado}
                 onClick={() => setEstadoFilter(estadoFilter === estado ? '' : estado)}

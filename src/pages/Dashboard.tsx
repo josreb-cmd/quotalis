@@ -64,7 +64,7 @@ export default function Dashboard() {
         return acc + (q.valor_quota - q.total_pago);
       }, 0);
 
-      const fracoesComCredito = quotas.filter(q => q.estado === 'Credito').length;
+      const fracoesComCredito = quotas.filter(q => q.estado === 'Crédito').length;
       const permilagemTotal = fracoes.reduce((acc, f) => acc + Number(f.permilagem), 0);
 
       const mesesComQuotasSet = new Set<string>();
@@ -89,7 +89,7 @@ export default function Dashboard() {
       });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
-      toast.error('Erro ao carregar dados do dashboard');
+      toast.error('Erro ao carregar dados do painel');
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,7 @@ export default function Dashboard() {
   }
 
   if (loading) {
-    return <Loading message="A carregar dashboard..." />;
+    return <Loading message="A carregar painel..." />;
   }
 
   const currentYear = new Date().getFullYear();
