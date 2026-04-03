@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Eye, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
-import { formatCurrency, formatNumber, formatDate, TIPOLOGIAS } from '../lib/utils';
+import { formatCurrency, formatNumber, formatDate, TIPOLOGIAS, MONTHS_PT } from '../lib/utils';
 import Card, { CardHeader, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Loading from '../components/ui/Loading';
-import Badge from '../components/ui/Badge';
+import Badge, { getEstadoBadgeVariant } from '../components/ui/Badge';
 import { Table, TableHead, TableBody, TableRow, TableCell } from '../components/ui/Table';
-import type { Fracao } from '../types/database';
+import type { Fracao, QuotaMensal } from '../types/database';
 
 const emptyFracao: Partial<Fracao> = {
   nome_condomino: '',
@@ -32,6 +32,10 @@ export default function Fracoes() {
   const [fracoes, setFracoes] = useState<Fracao[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFichaOpen, setIsFichaOpen] = useState(false);
+  const [selectedFracao, setSelectedFracao] = useState<Fracao | null>(null);
+  const [fracaoQuotas, setFracaoQuotas] = useState<QuotaMensal[]>([]);
+  const [loadingFicha, setLoadingFicha] = useState(false);
   const [editingFracao, setEditingFracao] = useState<Partial<Fracao> | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,6 +81,45 @@ export default function Fracoes() {
     setEditingFracao({ ...fracao });
     setErrors({});
     setIsModalOpen(true);
+  }
+
+  async function openFicha(fracao: Fracao) {
+    setSelectedFracao(fracao);
+    setIsFichaOpen(true);
+    setLoadingFicha(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('quotas_mensais')
+        .select('*')
+        .eq('id_fracao', fracao.id)
+        .order('mes', { ascending: false });
+
+      if (error) throw error;
+      setFracaoQuotas(data || []);
+    } catch (error) {
+      console.error('Error loading fracao quotas:', error);
+      toast.error('Erro ao carregar historico de quotas');
+    } finally {
+      setLoadingFicha(false);
+    }
+  }
+
+  function closeFicha() {
+    setIsFichaOpen(false);
+    setSelectedFracao(null);
+    setFracaoQuotas([]);
+  }
+
+  function calculateSaldo(): number {
+    return fracaoQuotas.reduce((acc, q) => {
+      return acc + (q.total_pago - q.valor_quota);
+    }, 0);
+  }
+
+  function formatMesLabel(mes: string): string {
+    const date = new Date(mes);
+    return `${MONTHS_PT[date.getMonth()]} ${date.getFullYear()}`;
   }
 
   function validateForm(): boolean {
@@ -273,14 +316,23 @@ export default function Fracoes() {
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
                     <button
+                      onClick={() => openFicha(fracao)}
+                      className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      title="Ver ficha"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => openEditModal(fracao)}
                       className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Editar"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(fracao)}
                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Eliminar"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -427,6 +479,124 @@ export default function Fracoes() {
           </div>
         </div>
       </Modal>
+
+      {isFichaOpen && selectedFracao && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Ficha da Fraccao {selectedFracao.fracao}
+                </h2>
+                <p className="text-gray-500 text-sm mt-1">{selectedFracao.nome_condomino}</p>
+              </div>
+              <button
+                onClick={closeFicha}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Tipologia</p>
+                  <p className="text-lg font-semibold text-gray-900 mt-1">
+                    {selectedFracao.tipologia || '-'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Quota Mensal</p>
+                  <p className="text-lg font-semibold text-gray-900 mt-1">
+                    {formatCurrency(selectedFracao.quota_mensal)}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Permilagem</p>
+                  <p className="text-lg font-semibold text-gray-900 mt-1">
+                    {formatNumber(selectedFracao.permilagem, 3)}
+                  </p>
+                </div>
+                <div className={`rounded-lg p-4 ${calculateSaldo() >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Saldo Actual</p>
+                  <p className={`text-lg font-semibold mt-1 ${calculateSaldo() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {calculateSaldo() >= 0 ? '+' : ''}{formatCurrency(calculateSaldo())}
+                  </p>
+                </div>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Historico de Quotas Mensais</h3>
+
+              {loadingFicha ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : fracaoQuotas.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  Nenhuma quota registada para esta fraccao.
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Mes
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Valor Quota
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Total Pago
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Diferenca
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Estado
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {fracaoQuotas.map((quota) => {
+                        const diferenca = quota.total_pago - quota.valor_quota;
+                        return (
+                          <tr key={quota.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                              {formatMesLabel(quota.mes)}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-right text-gray-900">
+                              {formatCurrency(quota.valor_quota)}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-right text-gray-900">
+                              {formatCurrency(quota.total_pago)}
+                            </td>
+                            <td className={`px-4 py-3 text-sm text-right font-medium ${diferenca >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {diferenca >= 0 ? '+' : ''}{formatCurrency(diferenca)}
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <Badge variant={getEstadoBadgeVariant(quota.estado)}>{quota.estado}</Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t bg-gray-50">
+              <div className="flex justify-end">
+                <Button variant="secondary" onClick={closeFicha}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
