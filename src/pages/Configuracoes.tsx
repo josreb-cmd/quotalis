@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Plus } from 'lucide-react';
+import { Save, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { formatCurrency } from '../lib/utils';
@@ -21,6 +21,7 @@ export default function Configuracoes() {
   const [savingConfig, setSavingConfig] = useState(false);
   const [savingSaldos, setSavingSaldos] = useState(false);
   const [newSaldoYear, setNewSaldoYear] = useState(new Date().getFullYear());
+  const [clearingData, setClearingData] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -144,6 +145,62 @@ export default function Configuracoes() {
     setSaldos(saldos.map(s =>
       s.id === id ? { ...s, [field]: value } : s
     ));
+  }
+
+  async function handleClearTestData() {
+    const confirmed = confirm(
+      'Tem a certeza? Esta operação é irreversível.\n\n' +
+      'Serão apagados:\n' +
+      '- Todas as imputações\n' +
+      '- Todos os pagamentos\n' +
+      '- Todas as quotas mensais\n' +
+      '- Todas as quotas extraordinárias\n' +
+      '- Todas as despesas\n' +
+      '- Todos os registos de orçamento\n' +
+      '- Todas as entradas de saldos anuais\n' +
+      '- Frações 3ºA (João Teste) e 4ºA (Maria Cariolina)\n\n' +
+      'Serão mantidos: 1ºA, 1ºB, 2ºA, 2ºB e o administrador do 2ºA.'
+    );
+
+    if (!confirmed) return;
+
+    setClearingData(true);
+    try {
+      const { error: imputacoesError } = await supabase.from('imputacoes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (imputacoesError) throw imputacoesError;
+
+      const { error: pagamentosError } = await supabase.from('pagamentos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (pagamentosError) throw pagamentosError;
+
+      const { error: quotasMensaisError } = await supabase.from('quotas_mensais').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (quotasMensaisError) throw quotasMensaisError;
+
+      const { error: quotasExtraError } = await supabase.from('quotas_extraordinarias').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (quotasExtraError) throw quotasExtraError;
+
+      const { error: despesasError } = await supabase.from('despesas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (despesasError) throw despesasError;
+
+      const { error: orcamentoError } = await supabase.from('orcamento').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (orcamentoError) throw orcamentoError;
+
+      const { error: saldosError } = await supabase.from('saldos_anuais').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (saldosError) throw saldosError;
+
+      const { error: fracoesError } = await supabase
+        .from('fracoes')
+        .delete()
+        .or('fracao.eq.3ºA,fracao.eq.4ºA');
+      if (fracoesError) throw fracoesError;
+
+      toast.success('Dados de teste limpos com sucesso!');
+      loadData();
+    } catch (error) {
+      console.error('Error clearing test data:', error);
+      toast.error('Erro ao limpar dados de teste');
+    } finally {
+      setClearingData(false);
+    }
   }
 
   if (loading) {
@@ -283,6 +340,27 @@ export default function Configuracoes() {
                 ))}
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold text-red-600">Zona de Perigo</h2>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-gray-900">Limpar Dados de Teste</p>
+                <p className="text-sm text-gray-500">
+                  Remove todos os dados transacionais e as frações de teste (3ºA e 4ºA).
+                  Mantém apenas as frações 1ºA, 1ºB, 2ºA, 2ºB e o administrador.
+                </p>
+              </div>
+              <Button variant="danger" onClick={handleClearTestData} loading={clearingData}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Limpar Dados de Teste
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
