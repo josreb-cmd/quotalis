@@ -136,7 +136,7 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
     const colWidths = [35, 12, 18, 18, 18, ...Array(12).fill(14), 18, 15, 18, 18];
     let x = 10;
 
-    ['Descrição', 'Cód.', 'Cota', 'Extra', 'Saldo', ...MONTHS_SHORT_PT, 'Saldo', 'Meses', 'Extra Pg.', 'Extra Div.'].forEach((header, i) => {
+    ['Descrição', 'Cód.', 'Quota', 'Extra', 'Saldo', ...MONTHS_SHORT_PT, 'Saldo', 'Meses', 'Extra Pg.', 'Extra Div.'].forEach((header, i) => {
       doc.text(header, x + 1, y);
       x += colWidths[i];
     });
@@ -218,7 +218,7 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
               <tr>
                 <th className="sticky left-0 bg-gray-50 px-3 py-2 text-left font-semibold text-gray-600 border-r z-20">Descrição</th>
                 <th className="sticky left-[150px] bg-gray-50 px-2 py-2 text-left font-semibold text-gray-600 border-r z-20">Cód.</th>
-                <th className="sticky left-[190px] bg-gray-50 px-2 py-2 text-right font-semibold text-gray-600 border-r z-20">Cota</th>
+                <th className="sticky left-[190px] bg-gray-50 px-2 py-2 text-right font-semibold text-gray-600 border-r z-20">Quota</th>
                 <th className="px-2 py-2 text-right font-semibold text-gray-600">Extra</th>
                 <th className="px-2 py-2 text-right font-semibold text-gray-600">Saldo 01/01</th>
                 {MONTHS_SHORT_PT.map((m, i) => (
