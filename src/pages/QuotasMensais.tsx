@@ -176,7 +176,7 @@ export default function QuotasMensais() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Quotas Mensais</h1>
-          <p className="text-gray-500 mt-1">Gestao das quotas mensais por fraccao</p>
+          <p className="text-gray-500 mt-1">Gestão das quotas mensais por fração</p>
         </div>
         {!showCreditoView && (
           <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
@@ -208,7 +208,7 @@ export default function QuotasMensais() {
               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
           }`}
         >
-          Quotas do Mes
+          Quotas do Mês
         </button>
         <button
           onClick={() => setShowCreditoView(true)}
@@ -219,7 +219,7 @@ export default function QuotasMensais() {
           }`}
         >
           <Coins className="w-4 h-4" />
-          Fraccoes com Credito
+          Frações com Crédito
           {fracoesComCredito.length > 0 && (
             <span className={`px-2 py-0.5 rounded-full text-xs ${
               showCreditoView ? 'bg-white/20' : 'bg-green-100 text-green-700'
@@ -239,14 +239,14 @@ export default function QuotasMensais() {
                   <Coins className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Fraccoes com Credito Acumulado</h3>
+                  <h3 className="font-semibold text-gray-900">Frações com Crédito Acumulado</h3>
                   <p className="text-sm text-gray-500">
-                    {fracoesComCredito.length} fraccao(oes) com credito
+                    {fracoesComCredito.length} fração(ões) com crédito
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-500">Total Credito</p>
+                <p className="text-sm text-gray-500">Total Crédito</p>
                 <p className="text-xl font-bold text-green-600">{formatCurrency(totalCredito)}</p>
               </div>
             </div>
@@ -254,11 +254,11 @@ export default function QuotasMensais() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell header>Fraccao</TableCell>
-                <TableCell header>Condomino</TableCell>
+                <TableCell header>Fração</TableCell>
+                <TableCell header>Condómino</TableCell>
                 <TableCell header>Tipologia</TableCell>
                 <TableCell header className="text-right">Quota Mensal</TableCell>
-                <TableCell header className="text-right">Credito Acumulado</TableCell>
+                <TableCell header className="text-right">Crédito Acumulado</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -276,7 +276,7 @@ export default function QuotasMensais() {
               {fracoesComCredito.length === 0 && (
                 <TableRow>
                   <TableCell className="text-center text-gray-500 py-8" colSpan={5}>
-                    Nenhuma fraccao com credito acumulado
+                    Nenhuma fração com crédito acumulado
                   </TableCell>
                 </TableRow>
               )}
@@ -310,7 +310,7 @@ export default function QuotasMensais() {
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Pesquisar fraccao ou condomino..."
+                      placeholder="Pesquisar fração ou condómino..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-72"
@@ -338,8 +338,8 @@ export default function QuotasMensais() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell header>Fraccao</TableCell>
-                  <TableCell header>Condomino</TableCell>
+                  <TableCell header>Fração</TableCell>
+                  <TableCell header>Condómino</TableCell>
                   <TableCell header className="text-right">Valor Quota</TableCell>
                   <TableCell header className="text-right">Total Pago</TableCell>
                   <TableCell header className="text-right">Em Falta</TableCell>
@@ -367,7 +367,7 @@ export default function QuotasMensais() {
                   <TableRow>
                     <TableCell className="text-center text-gray-500 py-8" colSpan={6}>
                       {quotas.length === 0
-                        ? 'Nenhuma quota registada para este mes. Use o botao "Gerar Quotas" no Dashboard.'
+                        ? 'Nenhuma quota registada para este mês. Use o botão "Gerar Quotas" no Painel.'
                         : 'Nenhuma quota encontrada com os filtros aplicados'}
                     </TableCell>
                   </TableRow>

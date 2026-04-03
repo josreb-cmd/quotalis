@@ -56,7 +56,7 @@ export default function Fracoes() {
       setFracoes(data || []);
     } catch (error) {
       console.error('Error loading fracoes:', error);
-      toast.error('Erro ao carregar fraccoes');
+      toast.error('Erro ao carregar frações');
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export default function Fracoes() {
       setFracaoQuotas(data || []);
     } catch (error) {
       console.error('Error loading fracao quotas:', error);
-      toast.error('Erro ao carregar historico de quotas');
+      toast.error('Erro ao carregar histórico de quotas');
     } finally {
       setLoadingFicha(false);
     }
@@ -126,10 +126,10 @@ export default function Fracoes() {
     const newErrors: Record<string, string> = {};
 
     if (!editingFracao?.nome_condomino?.trim()) {
-      newErrors.nome_condomino = 'Nome do condomino e obrigatorio';
+      newErrors.nome_condomino = 'Nome do condómino é obrigatório';
     }
     if (!editingFracao?.fracao?.trim()) {
-      newErrors.fracao = 'Fracao e obrigatoria';
+      newErrors.fracao = 'Fração é obrigatória';
     }
     if (!editingFracao?.quota_mensal || editingFracao.quota_mensal <= 0) {
       newErrors.quota_mensal = 'Quota mensal deve ser maior que zero';
@@ -145,7 +145,7 @@ export default function Fracoes() {
     const newTotalPermilagem = otherFracoesPermilagem + currentPermilagem;
 
     if (editingFracao?.ativa !== false && newTotalPermilagem > 1000) {
-      newErrors.permilagem = `Nao e possivel guardar - a permilagem total ficaria em ${formatNumber(newTotalPermilagem, 3)}, superior ao maximo de 1.000,000`;
+      newErrors.permilagem = `Não é possível guardar - a permilagem total ficaria em ${formatNumber(newTotalPermilagem, 3)}, superior ao máximo de 1.000,000`;
     }
 
     setErrors(newErrors);
@@ -177,7 +177,7 @@ export default function Fracoes() {
           .eq('id', editingFracao.id);
 
         if (error) throw error;
-        toast.success('Fraccao actualizada com sucesso');
+        toast.success('Fração atualizada com sucesso');
       } else {
         const { error } = await supabase.from('fracoes').insert({
           nome_condomino: editingFracao?.nome_condomino,
@@ -195,7 +195,7 @@ export default function Fracoes() {
         });
 
         if (error) throw error;
-        toast.success('Fraccao criada com sucesso');
+        toast.success('Fração criada com sucesso');
       }
 
       setIsModalOpen(false);
@@ -203,14 +203,14 @@ export default function Fracoes() {
       loadFracoes();
     } catch (error) {
       console.error('Error saving fracao:', error);
-      toast.error('Erro ao guardar fraccao');
+      toast.error('Erro ao guardar fração');
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete(fracao: Fracao) {
-    if (!confirm(`Tem a certeza que deseja eliminar a fraccao "${fracao.fracao}"?`)) {
+    if (!confirm(`Tem a certeza que deseja eliminar a fração "${fracao.fracao}"?`)) {
       return;
     }
 
@@ -221,11 +221,11 @@ export default function Fracoes() {
         .eq('id', fracao.id);
 
       if (error) throw error;
-      toast.success('Fraccao eliminada com sucesso');
+      toast.success('Fração eliminada com sucesso');
       loadFracoes();
     } catch (error) {
       console.error('Error deleting fracao:', error);
-      toast.error('Erro ao eliminar fraccao');
+      toast.error('Erro ao eliminar fração');
     }
   }
 
@@ -241,19 +241,19 @@ export default function Fracoes() {
     .reduce((acc, f) => acc + Number(f.permilagem), 0);
 
   if (loading) {
-    return <Loading message="A carregar fraccoes..." />;
+    return <Loading message="A carregar frações..." />;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Fraccoes</h1>
-          <p className="text-gray-500 mt-1">Gestao das fraccoes do condominio</p>
+          <h1 className="text-2xl font-bold text-gray-900">Frações</h1>
+          <p className="text-gray-500 mt-1">Gestão das frações do condomínio</p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="w-4 h-4 mr-2" />
-          Nova Fraccao
+          Nova Fração
         </Button>
       </div>
 
@@ -274,7 +274,7 @@ export default function Fracoes() {
             </div>
             <div className="flex items-center gap-4 text-sm">
               <span className="text-gray-500">
-                Total: <span className="font-semibold text-gray-900">{fracoes.length}</span> fraccoes
+                Total: <span className="font-semibold text-gray-900">{fracoes.length}</span> frações
               </span>
               <span className="text-gray-300">|</span>
               <span className="text-gray-500">
@@ -289,14 +289,14 @@ export default function Fracoes() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell header>Fraccao</TableCell>
-              <TableCell header>Codigo</TableCell>
-              <TableCell header>Condomino</TableCell>
+              <TableCell header>Fração</TableCell>
+              <TableCell header>Código</TableCell>
+              <TableCell header>Condómino</TableCell>
               <TableCell header>Tipologia</TableCell>
               <TableCell header className="text-right">Quota Mensal</TableCell>
               <TableCell header className="text-right">Permilagem</TableCell>
               <TableCell header>Estado</TableCell>
-              <TableCell header className="text-right">Accoes</TableCell>
+              <TableCell header className="text-right">Ações</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -310,7 +310,7 @@ export default function Fracoes() {
                 <TableCell className="text-right">{formatNumber(fracao.permilagem, 3)}</TableCell>
                 <TableCell>
                   <Badge variant={fracao.ativa ? 'success' : 'gray'}>
-                    {fracao.ativa ? 'Activa' : 'Inactiva'}
+                    {fracao.ativa ? 'Ativa' : 'Inativa'}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -343,7 +343,7 @@ export default function Fracoes() {
             {filteredFracoes.length === 0 && (
               <TableRow>
                 <TableCell className="text-center text-gray-500 py-8" colSpan={8}>
-                  {searchTerm ? 'Nenhuma fraccao encontrada' : 'Nenhuma fraccao registada'}
+                  {searchTerm ? 'Nenhuma fração encontrada' : 'Nenhuma fração registada'}
                 </TableCell>
               </TableRow>
             )}
@@ -354,14 +354,14 @@ export default function Fracoes() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingFracao?.id ? 'Editar Fraccao' : 'Nova Fraccao'}
+        title={editingFracao?.id ? 'Editar Fração' : 'Nova Fração'}
         size="lg"
       >
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2">
               <Input
-                label="Fraccao"
+                label="Fração"
                 value={editingFracao?.fracao || ''}
                 onChange={(e) => setEditingFracao({ ...editingFracao, fracao: e.target.value })}
                 placeholder="Ex: 1.A, Gar 1 P-3"
@@ -369,16 +369,16 @@ export default function Fracoes() {
               />
             </div>
             <Input
-              label="Codigo"
+              label="Código"
               value={editingFracao?.codigo || ''}
               onChange={(e) => setEditingFracao({ ...editingFracao, codigo: e.target.value })}
-              hint="Atribuido automaticamente"
+              hint="Atribuído automaticamente"
               disabled={!editingFracao?.id}
             />
           </div>
 
           <Input
-            label="Nome do Condomino"
+            label="Nome do Condómino"
             value={editingFracao?.nome_condomino || ''}
             onChange={(e) => setEditingFracao({ ...editingFracao, nome_condomino: e.target.value })}
             placeholder="Nome completo"
@@ -391,7 +391,7 @@ export default function Fracoes() {
               value={editingFracao?.tipologia || ''}
               onChange={(e) => setEditingFracao({ ...editingFracao, tipologia: e.target.value })}
               options={TIPOLOGIAS.map(t => ({ value: t, label: t }))}
-              placeholder="Seleccionar..."
+              placeholder="Selecionar..."
             />
             <Input
               label="Data de Entrada"
@@ -431,7 +431,7 @@ export default function Fracoes() {
               placeholder="email@exemplo.com"
             />
             <Input
-              label="Telemovel"
+              label="Telemóvel"
               value={editingFracao?.telemovel || ''}
               onChange={(e) => setEditingFracao({ ...editingFracao, telemovel: e.target.value })}
               placeholder="+351 912 345 678"
@@ -452,7 +452,7 @@ export default function Fracoes() {
               onChange={(e) => setEditingFracao({ ...editingFracao, notas: e.target.value })}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Observacoes..."
+              placeholder="Observações..."
             />
           </div>
 
@@ -465,7 +465,7 @@ export default function Fracoes() {
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <label htmlFor="ativa" className="text-sm text-gray-700">
-              Fraccao activa
+              Fração ativa
             </label>
           </div>
 
@@ -474,7 +474,7 @@ export default function Fracoes() {
               Cancelar
             </Button>
             <Button onClick={handleSave} loading={saving}>
-              {editingFracao?.id ? 'Guardar Alteracoes' : 'Criar Fraccao'}
+              {editingFracao?.id ? 'Guardar Alterações' : 'Criar Fração'}
             </Button>
           </div>
         </div>
@@ -486,7 +486,7 @@ export default function Fracoes() {
             <div className="flex items-center justify-between p-6 border-b">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  Ficha da Fraccao {selectedFracao.fracao}
+                  Ficha da Fração {selectedFracao.fracao}
                 </h2>
                 <p className="text-gray-500 text-sm mt-1">{selectedFracao.nome_condomino}</p>
               </div>
@@ -519,14 +519,14 @@ export default function Fracoes() {
                   </p>
                 </div>
                 <div className={`rounded-lg p-4 ${calculateSaldo() >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Saldo Actual</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">Saldo Atual</p>
                   <p className={`text-lg font-semibold mt-1 ${calculateSaldo() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {calculateSaldo() >= 0 ? '+' : ''}{formatCurrency(calculateSaldo())}
                   </p>
                 </div>
               </div>
 
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Historico de Quotas Mensais</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Histórico de Quotas Mensais</h3>
 
               {loadingFicha ? (
                 <div className="flex items-center justify-center py-12">
@@ -534,7 +534,7 @@ export default function Fracoes() {
                 </div>
               ) : fracaoQuotas.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  Nenhuma quota registada para esta fraccao.
+                  Nenhuma quota registada para esta fração.
                 </div>
               ) : (
                 <div className="border rounded-lg overflow-hidden">
@@ -542,7 +542,7 @@ export default function Fracoes() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                          Mes
+                          Mês
                         </th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Valor Quota
@@ -551,7 +551,7 @@ export default function Fracoes() {
                           Total Pago
                         </th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                          Diferenca
+                          Diferença
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Estado
