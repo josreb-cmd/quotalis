@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatNumber, MONTHS_SHORT_PT } from '../../lib/utils';
 import Button from '../ui/Button';
 import Loading from '../ui/Loading';
-import type { Fracao, QuotaMensal, QuotaExtraordinaria, Pagamento, Configuracao } from '../../types/database';
+import type { Fracao, QuotaMensal, QuotaExtraordinaria, Pagamento, Configuracao, Administrador } from '../../types/database';
 
 interface MapaCobrancasProps {
   year: number;
@@ -18,6 +18,7 @@ interface FracaoRow {
   cotaExtraAnual: number;
   saldoInicial: number;
   pagamentosMensais: number[];
+  mesesIsentos: boolean[];
   saldoFinal: number;
   mesesDivida: number;
   cotaExtraPaga: number;
@@ -35,19 +36,37 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
     loadData();
   }, [year]);
 
+  function isMonthExempt(administradores: Administrador[], fracaoId: string, year: number, monthIndex: number): boolean {
+    const monthYYYYMM = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+
+    return administradores.some(admin => {
+      if (admin.id_fracao !== fracaoId) return false;
+
+      const inicioYYYYMM = admin.inicio_isencao.substring(0, 7);
+      const fimYYYYMM = admin.fim_isencao.substring(0, 7);
+
+      if (admin.data_renuncia) {
+        const renunciaYYYYMM = admin.data_renuncia.substring(0, 7);
+        if (monthYYYYMM > renunciaYYYYMM) return false;
+      }
+
+      return monthYYYYMM >= inicioYYYYMM && monthYYYYMM <= fimYYYYMM;
+    });
+  }
+
   async function loadData() {
     setLoading(true);
     try {
       const startDate = `${year}-01-01`;
       const endDate = `${year}-12-31`;
-      const prevYearEnd = `${year - 1}-12-31`;
 
-      const [fracoesRes, quotasRes, quotasExtraRes, pagamentosRes, configRes] = await Promise.all([
+      const [fracoesRes, quotasRes, quotasExtraRes, pagamentosRes, configRes, adminRes] = await Promise.all([
         supabase.from('fracoes').select('*').eq('ativa', true).order('fracao'),
         supabase.from('quotas_mensais').select('*').gte('mes', startDate).lte('mes', endDate),
         supabase.from('quotas_extraordinarias').select('*').gte('prazo', startDate).lte('prazo', endDate),
         supabase.from('pagamentos').select('*').gte('data_pagamento', startDate).lte('data_pagamento', endDate),
         supabase.from('configuracoes').select('*').maybeSingle(),
+        supabase.from('administradores').select('*'),
       ]);
 
       if (fracoesRes.error) throw fracoesRes.error;
@@ -59,6 +78,7 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
       const quotas = quotasRes.data || [];
       const quotasExtra = quotasExtraRes.data || [];
       const pagamentos = pagamentosRes.data || [];
+      const administradores = adminRes.data || [];
 
       setConfig(configRes.data);
       setUnidentifiedPayments(pagamentos.filter(p => p.por_identificar));
@@ -68,15 +88,35 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
         const fracaoQuotasExtra = quotasExtra.filter(q => q.id_fracao === fracao.id);
 
         const pagamentosMensais = Array(12).fill(0);
+        const mesesIsentos = Array(12).fill(false);
+
+        for (let m = 0; m < 12; m++) {
+          mesesIsentos[m] = isMonthExempt(administradores, fracao.id, year, m);
+        }
+
         fracaoQuotas.forEach(q => {
-          const monthIndex = new Date(q.mes).getMonth();
+          const dateParts = q.mes.split('-');
+          const monthIndex = parseInt(dateParts[1], 10) - 1;
           pagamentosMensais[monthIndex] = q.total_pago;
         });
 
-        const totalQuotasDevidas = fracao.quota_mensal * 12;
-        const totalPago = fracaoQuotas.reduce((acc, q) => acc + q.total_pago, 0);
+        let totalQuotasDevidas = 0;
+        let totalPago = 0;
+
+        for (let m = 0; m < 12; m++) {
+          if (mesesIsentos[m]) continue;
+
+          const mesStr = `${year}-${String(m + 1).padStart(2, '0')}-01`;
+          const quotaDoMes = fracaoQuotas.find(q => q.mes === mesStr);
+
+          if (quotaDoMes) {
+            totalQuotasDevidas += quotaDoMes.valor_quota;
+            totalPago += quotaDoMes.total_pago;
+          }
+        }
+
         const saldoFinal = totalPago - totalQuotasDevidas;
-        const mesesDivida = saldoFinal < 0 ? saldoFinal / fracao.quota_mensal : 0;
+        const mesesDivida = saldoFinal < 0 && fracao.quota_mensal > 0 ? saldoFinal / fracao.quota_mensal : 0;
 
         const cotaExtraPaga = fracaoQuotasExtra.reduce((acc, q) => acc + q.total_pago, 0);
         const cotaExtraDevida = fracaoQuotasExtra.reduce((acc, q) => acc + q.valor_por_fracao, 0);
@@ -87,6 +127,7 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
           cotaExtraAnual: cotaExtraDevida,
           saldoInicial: 0,
           pagamentosMensais,
+          mesesIsentos,
           saldoFinal,
           mesesDivida,
           cotaExtraPaga,
@@ -243,9 +284,13 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
                   {row.pagamentosMensais.map((val, i) => (
                     <td
                       key={i}
-                      className={`px-2 py-2 text-right ${getCellColor(val, row.cotaMensal, false)}`}
+                      className={`px-2 py-2 text-right ${getCellColor(val, row.cotaMensal, row.mesesIsentos[i])}`}
                     >
-                      {val > 0 ? formatCurrency(val) : '-'}
+                      {row.mesesIsentos[i] ? (
+                        <span className="text-gray-500 italic">Isento</span>
+                      ) : (
+                        val > 0 ? formatCurrency(val) : '-'
+                      )}
                     </td>
                   ))}
                   <td className={`px-2 py-2 text-right font-medium ${row.saldoFinal < 0 ? 'text-red-600 font-bold' : 'text-green-600'}`}>
