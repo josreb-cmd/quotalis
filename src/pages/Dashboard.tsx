@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Building2, AlertTriangle, TrendingUp, TrendingDown, Users, PieChart, Calendar } from 'lucide-react';
+import { Building2, AlertTriangle, TrendingUp, TrendingDown, Users, PieChart, Calendar, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { formatCurrency, formatNumber, getFirstDayOfMonth, calculateEstado, MONTHS_PT } from '../lib/utils';
@@ -15,6 +15,7 @@ interface DashboardStats {
   porCobrarEsteMes: number;
   fracoesComCredito: number;
   permilagemTotal: number;
+  mesesComQuotas: string[];
 }
 
 export default function Dashboard() {
@@ -63,8 +64,16 @@ export default function Dashboard() {
         return acc + (q.valor_quota - q.total_pago);
       }, 0);
 
-      const fracoesComCredito = quotas.filter(q => q.estado === 'Crédito').length;
+      const fracoesComCredito = quotas.filter(q => q.estado === 'Credito').length;
       const permilagemTotal = fracoes.reduce((acc, f) => acc + Number(f.permilagem), 0);
+
+      const mesesComQuotasSet = new Set<string>();
+      quotas.forEach(q => {
+        if (q.mes) {
+          mesesComQuotasSet.add(q.mes);
+        }
+      });
+      const mesesComQuotas = Array.from(mesesComQuotasSet).sort();
 
       setStats({
         totalFracoesAtivas: fracoes.length,
@@ -73,6 +82,7 @@ export default function Dashboard() {
         porCobrarEsteMes,
         fracoesComCredito,
         permilagemTotal,
+        mesesComQuotas,
       });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
@@ -160,7 +170,7 @@ export default function Dashboard() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Visão geral do condomínio</p>
+        <p className="text-gray-500 mt-1">Visao geral do condominio</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -168,7 +178,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Frações Ativas</p>
+                <p className="text-sm font-medium text-gray-500">Fraccoes Activas</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats?.totalFracoesAtivas || 0}
                 </p>
@@ -203,7 +213,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Cobrado Este Mês</p>
+                <p className="text-sm font-medium text-gray-500">Cobrado Este Mes</p>
                 <p className="text-3xl font-bold text-green-600 mt-1">
                   {formatCurrency(stats?.cobradoEsteMes || 0)}
                 </p>
@@ -219,7 +229,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Por Cobrar Este Mês</p>
+                <p className="text-sm font-medium text-gray-500">Por Cobrar Este Mes</p>
                 <p className="text-3xl font-bold text-orange-600 mt-1">
                   {formatCurrency(stats?.porCobrarEsteMes || 0)}
                 </p>
@@ -235,7 +245,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Frações com Crédito</p>
+                <p className="text-sm font-medium text-gray-500">Fraccoes com Credito</p>
                 <p className="text-3xl font-bold text-purple-600 mt-1">
                   {stats?.fracoesComCredito || 0}
                 </p>
@@ -254,11 +264,11 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-gray-500">Permilagem Total</p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-3xl font-bold text-gray-900">
-                    {formatNumber(stats?.permilagemTotal || 0, 0)}
+                    {formatNumber(stats?.permilagemTotal || 0, 3)}
                   </p>
                   {stats?.permilagemTotal !== 1000 && (
                     <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
-                      Divergente
+                      Divergente - {formatNumber(stats?.permilagemTotal || 0, 3)}
                     </span>
                   )}
                 </div>
@@ -279,9 +289,9 @@ export default function Dashboard() {
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Gerar Quotas do Mês</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Gerar Quotas do Mes</h3>
                 <p className="text-sm text-gray-500">
-                  Criar quotas mensais para todas as frações ativas
+                  Criar quotas mensais para todas as fracoes activas
                 </p>
               </div>
             </div>
@@ -302,6 +312,41 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardContent>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <CheckCircle2 className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Quotas Geradas</h3>
+              <p className="text-sm text-gray-500">
+                Meses para os quais ja foram geradas quotas
+              </p>
+            </div>
+          </div>
+          {stats?.mesesComQuotas && stats.mesesComQuotas.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {stats.mesesComQuotas.map((mes) => {
+                const date = new Date(mes);
+                const monthName = MONTHS_PT[date.getMonth()];
+                const year = date.getFullYear();
+                return (
+                  <span
+                    key={mes}
+                    className="px-3 py-1.5 bg-green-50 text-green-700 text-sm font-medium rounded-lg border border-green-200"
+                  >
+                    {monthName} {year}
+                  </span>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">Nenhuma quota gerada ainda.</p>
+          )}
         </CardContent>
       </Card>
     </div>

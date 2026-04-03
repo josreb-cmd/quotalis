@@ -52,7 +52,7 @@ export default function Fracoes() {
       setFracoes(data || []);
     } catch (error) {
       console.error('Error loading fracoes:', error);
-      toast.error('Erro ao carregar frações');
+      toast.error('Erro ao carregar fraccoes');
     } finally {
       setLoading(false);
     }
@@ -83,16 +83,26 @@ export default function Fracoes() {
     const newErrors: Record<string, string> = {};
 
     if (!editingFracao?.nome_condomino?.trim()) {
-      newErrors.nome_condomino = 'Nome do condómino é obrigatório';
+      newErrors.nome_condomino = 'Nome do condomino e obrigatorio';
     }
     if (!editingFracao?.fracao?.trim()) {
-      newErrors.fracao = 'Fração é obrigatória';
+      newErrors.fracao = 'Fracao e obrigatoria';
     }
     if (!editingFracao?.quota_mensal || editingFracao.quota_mensal <= 0) {
       newErrors.quota_mensal = 'Quota mensal deve ser maior que zero';
     }
     if (!editingFracao?.permilagem || editingFracao.permilagem <= 0) {
       newErrors.permilagem = 'Permilagem deve ser maior que zero';
+    }
+
+    const currentPermilagem = editingFracao?.permilagem || 0;
+    const otherFracoesPermilagem = fracoes
+      .filter(f => f.ativa && f.id !== editingFracao?.id)
+      .reduce((acc, f) => acc + Number(f.permilagem), 0);
+    const newTotalPermilagem = otherFracoesPermilagem + currentPermilagem;
+
+    if (editingFracao?.ativa !== false && newTotalPermilagem > 1000) {
+      newErrors.permilagem = `Nao e possivel guardar - a permilagem total ficaria em ${formatNumber(newTotalPermilagem, 3)}, superior ao maximo de 1.000,000`;
     }
 
     setErrors(newErrors);
@@ -124,7 +134,7 @@ export default function Fracoes() {
           .eq('id', editingFracao.id);
 
         if (error) throw error;
-        toast.success('Fração atualizada com sucesso');
+        toast.success('Fraccao actualizada com sucesso');
       } else {
         const { error } = await supabase.from('fracoes').insert({
           nome_condomino: editingFracao?.nome_condomino,
@@ -142,7 +152,7 @@ export default function Fracoes() {
         });
 
         if (error) throw error;
-        toast.success('Fração criada com sucesso');
+        toast.success('Fraccao criada com sucesso');
       }
 
       setIsModalOpen(false);
@@ -150,14 +160,14 @@ export default function Fracoes() {
       loadFracoes();
     } catch (error) {
       console.error('Error saving fracao:', error);
-      toast.error('Erro ao guardar fração');
+      toast.error('Erro ao guardar fraccao');
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete(fracao: Fracao) {
-    if (!confirm(`Tem a certeza que deseja eliminar a fração "${fracao.fracao}"?`)) {
+    if (!confirm(`Tem a certeza que deseja eliminar a fraccao "${fracao.fracao}"?`)) {
       return;
     }
 
@@ -168,11 +178,11 @@ export default function Fracoes() {
         .eq('id', fracao.id);
 
       if (error) throw error;
-      toast.success('Fração eliminada com sucesso');
+      toast.success('Fraccao eliminada com sucesso');
       loadFracoes();
     } catch (error) {
       console.error('Error deleting fracao:', error);
-      toast.error('Erro ao eliminar fração');
+      toast.error('Erro ao eliminar fraccao');
     }
   }
 
@@ -188,19 +198,19 @@ export default function Fracoes() {
     .reduce((acc, f) => acc + Number(f.permilagem), 0);
 
   if (loading) {
-    return <Loading message="A carregar frações..." />;
+    return <Loading message="A carregar fraccoes..." />;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Frações</h1>
-          <p className="text-gray-500 mt-1">Gestão das frações do condomínio</p>
+          <h1 className="text-2xl font-bold text-gray-900">Fraccoes</h1>
+          <p className="text-gray-500 mt-1">Gestao das fraccoes do condominio</p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="w-4 h-4 mr-2" />
-          Nova Fração
+          Nova Fraccao
         </Button>
       </div>
 
@@ -221,7 +231,7 @@ export default function Fracoes() {
             </div>
             <div className="flex items-center gap-4 text-sm">
               <span className="text-gray-500">
-                Total: <span className="font-semibold text-gray-900">{fracoes.length}</span> frações
+                Total: <span className="font-semibold text-gray-900">{fracoes.length}</span> fraccoes
               </span>
               <span className="text-gray-300">|</span>
               <span className="text-gray-500">
@@ -236,14 +246,14 @@ export default function Fracoes() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell header>Fração</TableCell>
-              <TableCell header>Código</TableCell>
-              <TableCell header>Condómino</TableCell>
+              <TableCell header>Fraccao</TableCell>
+              <TableCell header>Codigo</TableCell>
+              <TableCell header>Condomino</TableCell>
               <TableCell header>Tipologia</TableCell>
               <TableCell header className="text-right">Quota Mensal</TableCell>
               <TableCell header className="text-right">Permilagem</TableCell>
               <TableCell header>Estado</TableCell>
-              <TableCell header className="text-right">Ações</TableCell>
+              <TableCell header className="text-right">Accoes</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -257,7 +267,7 @@ export default function Fracoes() {
                 <TableCell className="text-right">{formatNumber(fracao.permilagem, 3)}</TableCell>
                 <TableCell>
                   <Badge variant={fracao.ativa ? 'success' : 'gray'}>
-                    {fracao.ativa ? 'Ativa' : 'Inativa'}
+                    {fracao.ativa ? 'Activa' : 'Inactiva'}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -281,7 +291,7 @@ export default function Fracoes() {
             {filteredFracoes.length === 0 && (
               <TableRow>
                 <TableCell className="text-center text-gray-500 py-8" colSpan={8}>
-                  {searchTerm ? 'Nenhuma fração encontrada' : 'Nenhuma fração registada'}
+                  {searchTerm ? 'Nenhuma fraccao encontrada' : 'Nenhuma fraccao registada'}
                 </TableCell>
               </TableRow>
             )}
@@ -292,31 +302,31 @@ export default function Fracoes() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingFracao?.id ? 'Editar Fração' : 'Nova Fração'}
+        title={editingFracao?.id ? 'Editar Fraccao' : 'Nova Fraccao'}
         size="lg"
       >
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-2">
               <Input
-                label="Fração"
+                label="Fraccao"
                 value={editingFracao?.fracao || ''}
                 onChange={(e) => setEditingFracao({ ...editingFracao, fracao: e.target.value })}
-                placeholder="Ex: 1ºA, Gar 1 P-3"
+                placeholder="Ex: 1.A, Gar 1 P-3"
                 error={errors.fracao}
               />
             </div>
             <Input
-              label="Código"
+              label="Codigo"
               value={editingFracao?.codigo || ''}
               onChange={(e) => setEditingFracao({ ...editingFracao, codigo: e.target.value })}
-              hint="Atribuído automaticamente"
+              hint="Atribuido automaticamente"
               disabled={!editingFracao?.id}
             />
           </div>
 
           <Input
-            label="Nome do Condómino"
+            label="Nome do Condomino"
             value={editingFracao?.nome_condomino || ''}
             onChange={(e) => setEditingFracao({ ...editingFracao, nome_condomino: e.target.value })}
             placeholder="Nome completo"
@@ -329,7 +339,7 @@ export default function Fracoes() {
               value={editingFracao?.tipologia || ''}
               onChange={(e) => setEditingFracao({ ...editingFracao, tipologia: e.target.value })}
               options={TIPOLOGIAS.map(t => ({ value: t, label: t }))}
-              placeholder="Selecionar..."
+              placeholder="Seleccionar..."
             />
             <Input
               label="Data de Entrada"
@@ -369,7 +379,7 @@ export default function Fracoes() {
               placeholder="email@exemplo.com"
             />
             <Input
-              label="Telemóvel"
+              label="Telemovel"
               value={editingFracao?.telemovel || ''}
               onChange={(e) => setEditingFracao({ ...editingFracao, telemovel: e.target.value })}
               placeholder="+351 912 345 678"
@@ -390,7 +400,7 @@ export default function Fracoes() {
               onChange={(e) => setEditingFracao({ ...editingFracao, notas: e.target.value })}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Observações..."
+              placeholder="Observacoes..."
             />
           </div>
 
@@ -403,7 +413,7 @@ export default function Fracoes() {
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <label htmlFor="ativa" className="text-sm text-gray-700">
-              Fração ativa
+              Fraccao activa
             </label>
           </div>
 
@@ -412,7 +422,7 @@ export default function Fracoes() {
               Cancelar
             </Button>
             <Button onClick={handleSave} loading={saving}>
-              {editingFracao?.id ? 'Guardar Alterações' : 'Criar Fração'}
+              {editingFracao?.id ? 'Guardar Alteracoes' : 'Criar Fraccao'}
             </Button>
           </div>
         </div>
