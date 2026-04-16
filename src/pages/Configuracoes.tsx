@@ -158,7 +158,7 @@ export default function Configuracoes() {
       '- Todas as despesas\n' +
       '- Todos os registos de orçamento\n' +
       '- Todas as entradas de saldos anuais\n' +
-      '- Frações 3ºA (João Teste) e 4ºA (Maria Cariolina)\n\n' +
+      '- Frações 3ºA (João Teste) e 4ºA (Maria Carolina)\n\n' +
       'Serão mantidos: 1ºA, 1ºB, 2ºA, 2ºB e o administrador do 2ºA.'
     );
 

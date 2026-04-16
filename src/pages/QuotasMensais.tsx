@@ -241,7 +241,7 @@ export default function QuotasMensais() {
                 <div>
                   <h3 className="font-semibold text-gray-900">Frações com Crédito Acumulado</h3>
                   <p className="text-sm text-gray-500">
-                    {fracoesComCredito.length} fração(ões) com crédito
+                    {fracoesComCredito.length} {fracoesComCredito.length === 1 ? 'fração' : 'frações'} com crédito
                   </p>
                 </div>
               </div>

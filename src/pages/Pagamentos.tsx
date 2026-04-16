@@ -356,7 +356,7 @@ export default function Pagamentos() {
           <div className="flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-yellow-600" />
             <span className="text-yellow-800">
-              Existem <strong>{unidentifiedPagamentos.length}</strong> pagamento(s) por identificar
+              Existem <strong>{unidentifiedPagamentos.length}</strong> {unidentifiedPagamentos.length === 1 ? 'pagamento' : 'pagamentos'} por identificar
             </span>
           </div>
           <button
