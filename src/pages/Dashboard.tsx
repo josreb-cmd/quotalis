@@ -33,10 +33,11 @@ export default function Dashboard() {
 
   async function loadDashboardStats() {
     try {
-      const [fracoesRes, quotasRes, adminRes] = await Promise.all([
+      const [fracoesRes, quotasRes, adminRes, mesesRes] = await Promise.all([
         supabase.from('fracoes').select('*').eq('ativa', true),
         supabase.from('quotas_mensais').select('*'),
         supabase.from('administradores').select('*').is('data_renuncia', null),
+        supabase.rpc('get_distinct_months'),
       ]);
 
       if (fracoesRes.error) throw fracoesRes.error;
@@ -67,16 +68,24 @@ export default function Dashboard() {
       const fracoesComCredito = quotas.filter(q => q.estado === 'Crédito').length;
       const permilagemTotal = fracoes.reduce((acc, f) => acc + Number(f.permilagem), 0);
 
-      const mesesComQuotasSet = new Set<string>();
-      quotas.forEach(q => {
-        if (q.mes) {
-          const dateStr = q.mes.split('T')[0];
-          const [year, month] = dateStr.split('-');
-          const mesKey = `${year}-${month}`;
-          mesesComQuotasSet.add(mesKey);
-        }
-      });
-      const mesesComQuotas = Array.from(mesesComQuotasSet).sort();
+      let mesesComQuotas: string[] = [];
+      if (mesesRes.data && Array.isArray(mesesRes.data)) {
+        mesesComQuotas = mesesRes.data
+          .map((m: any) => m.mes_ano)
+          .filter(Boolean)
+          .sort();
+      } else {
+        const mesesComQuotasSet = new Set<string>();
+        quotas.forEach(q => {
+          if (q.mes) {
+            const dateStr = q.mes.split('T')[0];
+            const [year, month] = dateStr.split('-');
+            const mesKey = `${year}-${month}`;
+            mesesComQuotasSet.add(mesKey);
+          }
+        });
+        mesesComQuotas = Array.from(mesesComQuotasSet).sort();
+      }
 
       setStats({
         totalFracoesAtivas: fracoes.length,
