@@ -42,7 +42,11 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
     return administradores.some(admin => {
       if (admin.id_fracao !== fracaoId) return false;
 
-      const inicioYYYYMM = admin.inicio_isencao.substring(0, 7);
+      // Isenção começa no mês SEGUINTE à nomeação
+      const inicioDate = new Date(admin.inicio_isencao);
+      inicioDate.setMonth(inicioDate.getMonth() + 1);
+      const inicioYYYYMM = `${inicioDate.getFullYear()}-${String(inicioDate.getMonth() + 1).padStart(2, '0')}`;
+
       const fimYYYYMM = admin.fim_isencao.substring(0, 7);
 
       if (admin.data_renuncia) {
