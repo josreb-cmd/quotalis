@@ -7,7 +7,7 @@ import Card, { CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Loading from '../components/ui/Loading';
 import type { Fracao, QuotaMensal, Administrador } from '../types/database';
- 
+
 interface DashboardStats {
   totalFracoesAtivas: number;
   quotasEmAtraso: { count: number; valor: number };
@@ -17,7 +17,7 @@ interface DashboardStats {
   permilagemTotal: number;
   mesesComQuotas: string[];
 }
- 
+
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,11 +26,11 @@ export default function Dashboard() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
- 
+
   useEffect(() => {
     loadDashboardStats();
   }, []);
- 
+
   async function loadDashboardStats() {
     try {
       const [fracoesRes, quotasRes, adminRes] = await Promise.all([
@@ -38,37 +38,35 @@ export default function Dashboard() {
         supabase.from('quotas_mensais').select('*'),
         supabase.from('administradores').select('*').is('data_renuncia', null),
       ]);
- 
+
       if (fracoesRes.error) throw fracoesRes.error;
       if (quotasRes.error) throw quotasRes.error;
       if (adminRes.error) throw adminRes.error;
- 
+
       const fracoes = fracoesRes.data || [];
       const quotas = quotasRes.data || [];
-     console.log('QUOTAS:', JSON.stringify(quotas.slice(0, 2)));
-console.log('currentMonth:', getFirstDayOfMonth());
       const administradores = adminRes.data || [];
- 
+
       const currentMonth = getFirstDayOfMonth();
       const currentMonthQuotas = quotas.filter(q => q.mes?.split('T')[0] === currentMonth);
- 
+
       const quotasEmAtraso = quotas.filter(q =>
         q.estado === 'Atraso' || q.estado === 'Atraso Parcial'
       );
- 
+
       const valorEmAtraso = quotasEmAtraso.reduce((acc, q) =>
         acc + (q.valor_quota - q.total_pago), 0
       );
- 
+
       const cobradoEsteMes = currentMonthQuotas.reduce((acc, q) => acc + q.total_pago, 0);
       const porCobrarEsteMes = currentMonthQuotas.reduce((acc, q) => {
         if (q.estado === 'Isento' || q.estado === 'Pago' || q.estado === 'Crédito') return acc;
         return acc + (q.valor_quota - q.total_pago);
       }, 0);
- 
+
       const fracoesComCredito = quotas.filter(q => q.estado === 'Crédito').length;
       const permilagemTotal = fracoes.reduce((acc, f) => acc + Number(f.permilagem), 0);
- 
+
       const mesesComQuotasSet = new Set<string>();
       quotas.forEach(q => {
         if (q.mes) {
@@ -78,7 +76,7 @@ console.log('currentMonth:', getFirstDayOfMonth());
         }
       });
       const mesesComQuotas = Array.from(mesesComQuotasSet).sort();
- 
+
       setStats({
         totalFracoesAtivas: fracoes.length,
         quotasEmAtraso: { count: quotasEmAtraso.length, valor: valorEmAtraso },
@@ -95,51 +93,52 @@ console.log('currentMonth:', getFirstDayOfMonth());
       setLoading(false);
     }
   }
- 
+
   async function handleGerarQuotas() {
     setGenerating(true);
     try {
       const [year, month] = selectedMonth.split('-').map(Number);
-      const mesDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+      const mesDate = `${year}-${String(month).padStart(2, '0')}-01`;
       const mesLabel = `${MONTHS_PT[month - 1]} ${year}`;
- 
+
       const { data: fracoes, error: fracoesError } = await supabase
         .from('fracoes')
         .select('*')
         .eq('ativa', true);
- 
+
       if (fracoesError) throw fracoesError;
       if (!fracoes || fracoes.length === 0) {
         toast.error('Nenhuma fração ativa encontrada');
         return;
       }
- 
+
       const { data: existingQuotas, error: quotasError } = await supabase
         .from('quotas_mensais')
         .select('id_fracao')
         .eq('mes', mesDate);
- 
+
       if (quotasError) throw quotasError;
- 
+
       const existingFracaoIds = new Set(existingQuotas?.map(q => q.id_fracao) || []);
       const existingCount = existingQuotas?.length || 0;
- 
+
       if (existingCount >= fracoes.length) {
         toast.error(`As quotas de ${mesLabel} já foram geradas para todas as ${existingCount} frações.`);
         return;
       }
- 
+
+      // Buscar administradores com isenção activa no mês — isenção começa no mês SEGUINTE à nomeação
       const { data: administradores, error: adminError } = await supabase
         .from('administradores')
         .select('*')
         .is('data_renuncia', null)
-        .lte('inicio_isencao', mesDate)
+        .lt('inicio_isencao', mesDate)
         .gte('fim_isencao', mesDate);
- 
+
       if (adminError) throw adminError;
- 
+
       const adminFracaoIds = new Set(administradores?.map(a => a.id_fracao) || []);
- 
+
       const newQuotas = fracoes
         .filter(f => !existingFracaoIds.has(f.id))
         .map(f => ({
@@ -149,21 +148,21 @@ console.log('currentMonth:', getFirstDayOfMonth());
           total_pago: 0,
           estado: adminFracaoIds.has(f.id) ? 'Isento' : 'Pendente',
         }));
- 
+
       if (newQuotas.length === 0) {
         toast.error(`As quotas de ${mesLabel} já foram geradas para todas as frações.`);
         return;
       }
- 
+
       const { error: insertError } = await supabase
         .from('quotas_mensais')
         .insert(newQuotas);
- 
+
       if (insertError) {
         console.error('Insert error details:', insertError);
         throw insertError;
       }
- 
+
       toast.success(`${newQuotas.length} quotas geradas com sucesso`);
       loadDashboardStats();
     } catch (error) {
@@ -173,24 +172,24 @@ console.log('currentMonth:', getFirstDayOfMonth());
       setGenerating(false);
     }
   }
- 
+
   if (loading) {
     return <Loading message="A carregar painel..." />;
   }
- 
+
   const currentYear = new Date().getFullYear();
   const months = Array.from({ length: 12 }, (_, i) => ({
     value: `${currentYear}-${String(i + 1).padStart(2, '0')}`,
     label: `${MONTHS_PT[i]} ${currentYear}`,
   }));
- 
+
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Painel</h1>
         <p className="text-gray-500 mt-1">Visão geral do condomínio</p>
       </div>
- 
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardContent>
@@ -207,7 +206,7 @@ console.log('currentMonth:', getFirstDayOfMonth());
             </div>
           </CardContent>
         </Card>
- 
+
         <Card>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -226,7 +225,7 @@ console.log('currentMonth:', getFirstDayOfMonth());
             </div>
           </CardContent>
         </Card>
- 
+
         <Card>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -242,7 +241,7 @@ console.log('currentMonth:', getFirstDayOfMonth());
             </div>
           </CardContent>
         </Card>
- 
+
         <Card>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -258,7 +257,7 @@ console.log('currentMonth:', getFirstDayOfMonth());
             </div>
           </CardContent>
         </Card>
- 
+
         <Card>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -274,7 +273,7 @@ console.log('currentMonth:', getFirstDayOfMonth());
             </div>
           </CardContent>
         </Card>
- 
+
         <Card>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -298,7 +297,7 @@ console.log('currentMonth:', getFirstDayOfMonth());
           </CardContent>
         </Card>
       </div>
- 
+
       <Card>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -332,7 +331,7 @@ console.log('currentMonth:', getFirstDayOfMonth());
           </div>
         </CardContent>
       </Card>
- 
+
       <Card className="mt-6">
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
