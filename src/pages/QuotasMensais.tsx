@@ -80,7 +80,7 @@ export default function QuotasMensais() {
 
   async function loadData() {
     try {
-      const mesDate = new Date(selectedYear, selectedMonth, 1).toISOString().split('T')[0];
+      const mesDate = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`;
 
       const [quotasRes, fracoesRes, adminRes] = await Promise.all([
         supabase.from('quotas_mensais').select('*').eq('mes', mesDate),
