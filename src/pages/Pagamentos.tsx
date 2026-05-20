@@ -116,7 +116,7 @@ export default function Pagamentos() {
     let currentMonth = new Date(mesInicio);
 
     for (let i = 0; i < nMeses && remainingAmount > 0; i++) {
-      const mesDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).toISOString().split('T')[0];
+      const mesDate = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-01`;
 
       let { data: quota, error: quotaError } = await supabase
         .from('quotas_mensais')
@@ -180,7 +180,7 @@ export default function Pagamentos() {
 
     if (remainingAmount > 0) {
       const lastMonth = addMonths(new Date(mesInicio), nMeses - 1);
-      const mesDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1).toISOString().split('T')[0];
+      const mesDate = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`;
 
       const { data: lastQuota } = await supabase
         .from('quotas_mensais')
@@ -511,12 +511,23 @@ export default function Pagamentos() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Mês Início"
-              type="date"
-              value={editingPagamento?.mes_inicio || ''}
-              onChange={(e) => setEditingPagamento({ ...editingPagamento, mes_inicio: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mês Início</label>
+              <select
+                value={editingPagamento?.mes_inicio?.substring(0, 7) || ''}
+                onChange={(e) => setEditingPagamento({ ...editingPagamento, mes_inicio: `${e.target.value}-01` })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Selecionar mês...</option>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const year = new Date().getFullYear();
+                  const month = String(i + 1).padStart(2, '0');
+                  const value = `${year}-${month}`;
+                  const label = `${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][i]} ${year}`;
+                  return <option key={value} value={value}>{label}</option>;
+                })}
+              </select>
+            </div>
             <Input
               label="Número de Meses"
               type="number"
