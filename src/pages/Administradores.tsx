@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, UserMinus, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
-import { formatDate, addMonths } from '../lib/utils';
+import { formatDate, addMonths, MONTHS_PT } from '../lib/utils';
 import Card, { CardHeader, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -15,6 +15,19 @@ import type { Administrador, Fracao } from '../types/database';
 
 interface AdministradorWithFracao extends Administrador {
   fracao?: Fracao;
+}
+
+function calcularInicioIsencao(dataEleicao: string): string {
+  const d = new Date(dataEleicao);
+  // Isenção começa no 1º dia do mês SEGUINTE à eleição
+  const mesSeginte = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+  return `${mesSeginte.getFullYear()}-${String(mesSeginte.getMonth() + 1).padStart(2, '0')}-01`;
+}
+
+function formatarMesAno(dateStr: string): string {
+  if (!dateStr) return '';
+  const [year, month] = dateStr.split('-');
+  return `${MONTHS_PT[parseInt(month, 10) - 1]} ${year}`;
 }
 
 export default function Administradores() {
@@ -66,13 +79,14 @@ export default function Administradores() {
 
   function openCreateModal() {
     const today = new Date();
-    const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endIsencao = addMonths(firstOfMonth, 12);
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const inicioIsencao = calcularInicioIsencao(todayStr);
+    const fimIsencao = `${parseInt(inicioIsencao.substring(0, 4)) + 1}-${inicioIsencao.substring(5, 7)}-01`;
 
     setEditingAdmin({
-      data_eleicao: today.toISOString().split('T')[0],
-      inicio_isencao: firstOfMonth.toISOString().split('T')[0],
-      fim_isencao: endIsencao.toISOString().split('T')[0],
+      data_eleicao: todayStr,
+      inicio_isencao: inicioIsencao,
+      fim_isencao: fimIsencao,
     });
     setSelectedFracaoId('');
     setErrors({});
@@ -187,24 +201,27 @@ export default function Administradores() {
 
     setSaving(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
       const { error: renunciaError } = await supabase
         .from('administradores')
         .update({
-          data_renuncia: today,
-          fim_isencao: today,
+          data_renuncia: todayStr,
+          fim_isencao: todayStr,
         })
         .eq('id', substituindoAdmin.id);
 
       if (renunciaError) throw renunciaError;
 
+      const inicioIsencao = calcularInicioIsencao(todayStr);
+
       const { error: insertError } = await supabase
         .from('administradores')
         .insert({
           id_fracao: novaFracaoId,
-          data_eleicao: today,
-          inicio_isencao: today,
+          data_eleicao: todayStr,
+          inicio_isencao: inicioIsencao,
           fim_isencao: substituindoAdmin.fim_isencao,
           id_substitui: substituindoAdmin.id,
         });
@@ -301,8 +318,8 @@ export default function Administradores() {
                     <TableCell className="font-medium">{admin.fracao?.fracao || '-'}</TableCell>
                     <TableCell>{admin.fracao?.nome_condomino || '-'}</TableCell>
                     <TableCell>{formatDate(admin.data_eleicao)}</TableCell>
-                    <TableCell>{formatDate(admin.inicio_isencao)}</TableCell>
-                    <TableCell>{formatDate(admin.fim_isencao)}</TableCell>
+                    <TableCell>{formatarMesAno(admin.inicio_isencao)}</TableCell>
+                    <TableCell>{formatarMesAno(admin.fim_isencao)}</TableCell>
                     <TableCell>
                       <Badge variant={isIsento ? 'success' : 'gray'}>
                         {isIsento ? 'Isento' : 'Isenção terminada'}
@@ -414,37 +431,48 @@ export default function Administradores() {
             value={editingAdmin?.data_eleicao || ''}
             onChange={(e) => {
               const newDate = e.target.value;
-              const d = new Date(newDate);
-              const firstOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
-              const endIsencao = addMonths(firstOfMonth, 12);
+              const inicioIsencao = calcularInicioIsencao(newDate);
+              const fimIsencao = `${parseInt(inicioIsencao.substring(0, 4)) + 1}-${inicioIsencao.substring(5, 7)}-01`;
               setEditingAdmin({
                 ...editingAdmin,
                 data_eleicao: newDate,
-                inicio_isencao: firstOfMonth.toISOString().split('T')[0],
-                fim_isencao: endIsencao.toISOString().split('T')[0],
+                inicio_isencao: inicioIsencao,
+                fim_isencao: fimIsencao,
               });
             }}
             error={errors.data_eleicao}
           />
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Início Isenção"
-              type="date"
-              value={editingAdmin?.inicio_isencao || ''}
-              onChange={(e) => setEditingAdmin({ ...editingAdmin, inicio_isencao: e.target.value })}
-              disabled
-            />
-            <Input
-              label="Fim Isenção"
-              type="date"
-              value={editingAdmin?.fim_isencao || ''}
-              onChange={(e) => setEditingAdmin({ ...editingAdmin, fim_isencao: e.target.value })}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Início Isenção</label>
+              <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                {editingAdmin?.inicio_isencao ? formatarMesAno(editingAdmin.inicio_isencao) : '-'}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fim Isenção</label>
+              <select
+                value={editingAdmin?.fim_isencao?.substring(0, 7) || ''}
+                onChange={(e) => setEditingAdmin({ ...editingAdmin, fim_isencao: `${e.target.value}-01` })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Selecionar mês...</option>
+                {Array.from({ length: 24 }, (_, i) => {
+                  const base = editingAdmin?.inicio_isencao ? new Date(editingAdmin.inicio_isencao) : new Date();
+                  base.setMonth(base.getMonth() + i);
+                  const year = base.getFullYear();
+                  const month = String(base.getMonth() + 1).padStart(2, '0');
+                  const value = `${year}-${month}`;
+                  const label = `${MONTHS_PT[base.getMonth()]} ${year}`;
+                  return <option key={value} value={value}>{label}</option>;
+                })}
+              </select>
+            </div>
           </div>
 
           <p className="text-sm text-gray-500">
-            A isenção inicia no primeiro dia do mês de eleição e termina 12 meses depois.
+            A isenção inicia no primeiro mês após a eleição e termina no mês selecionado.
           </p>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
@@ -501,7 +529,7 @@ export default function Administradores() {
             Substituir <strong>{substituindoAdmin?.fracao?.nome_condomino}</strong> ({substituindoAdmin?.fracao?.fracao}).
           </p>
           <p className="text-sm text-gray-500">
-            O novo administrador herdará o período de isenção restante (até {substituindoAdmin?.fim_isencao ? formatDate(substituindoAdmin.fim_isencao) : '-'}).
+            O novo administrador terá isenção a partir do mês seguinte à data de hoje.
           </p>
 
           <Select
