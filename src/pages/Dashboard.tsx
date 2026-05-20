@@ -117,6 +117,10 @@ export default function Dashboard() {
         .eq('ativa', true);
 
       if (fracoesError) throw fracoesError;
+      if (!fracoes || fracoes.length === 0) {
+        toast.error('Nenhuma fração ativa encontrada');
+        return;
+      }
 
       const { data: existingQuotas, error: quotasError } = await supabase
         .from('quotas_mensais')
@@ -128,8 +132,8 @@ export default function Dashboard() {
       const existingFracaoIds = new Set(existingQuotas?.map(q => q.id_fracao) || []);
       const existingCount = existingQuotas?.length || 0;
 
-      if (existingCount > 0 && existingCount >= (fracoes?.length || 0)) {
-        toast.error(`As quotas de ${mesLabel} já foram geradas para ${existingCount} frações.`);
+      if (existingCount >= fracoes.length) {
+        toast.error(`As quotas de ${mesLabel} já foram geradas para todas as ${existingCount} frações.`);
         return;
       }
 
@@ -145,17 +149,17 @@ export default function Dashboard() {
       const adminFracaoIds = new Set(administradores?.map(a => a.id_fracao) || []);
 
       const newQuotas = fracoes
-        ?.filter(f => !existingFracaoIds.has(f.id))
+        .filter(f => !existingFracaoIds.has(f.id))
         .map(f => ({
           id_fracao: f.id,
           mes: mesDate,
           valor_quota: f.quota_mensal,
           total_pago: 0,
           estado: adminFracaoIds.has(f.id) ? 'Isento' : 'Pendente',
-        })) || [];
+        }));
 
       if (newQuotas.length === 0) {
-        toast.error(`As quotas de ${mesLabel} já foram geradas para ${existingCount} frações.`);
+        toast.error(`As quotas de ${mesLabel} já foram geradas para todas as frações.`);
         return;
       }
 
@@ -163,7 +167,10 @@ export default function Dashboard() {
         .from('quotas_mensais')
         .insert(newQuotas);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error details:', insertError);
+        throw insertError;
+      }
 
       toast.success(`${newQuotas.length} quotas geradas com sucesso`);
       loadDashboardStats();
