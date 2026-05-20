@@ -107,7 +107,7 @@ export default function MapaCobrancas({ year }: MapaCobrancasProps) {
           if (mesesIsentos[m]) continue;
 
           const mesStr = `${year}-${String(m + 1).padStart(2, '0')}-01`;
-          const quotaDoMes = fracaoQuotas.find(q => q.mes === mesStr);
+          const quotaDoMes = fracaoQuotas.find(q => q.mes?.split('T')[0] === mesStr);
 
           if (quotaDoMes) {
             totalQuotasDevidas += quotaDoMes.valor_quota;
