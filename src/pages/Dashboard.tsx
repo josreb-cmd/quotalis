@@ -48,7 +48,7 @@ export default function Dashboard() {
       const administradores = adminRes.data || [];
  
       const currentMonth = getFirstDayOfMonth();
-      const currentMonthQuotas = quotas.filter(q => q.mes === currentMonth);
+      const currentMonthQuotas = quotas.filter(q => q.mes?.split('T')[0] === currentMonth);
  
       const quotasEmAtraso = quotas.filter(q =>
         q.estado === 'Atraso' || q.estado === 'Atraso Parcial'
