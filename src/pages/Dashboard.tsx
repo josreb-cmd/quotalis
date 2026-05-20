@@ -45,6 +45,8 @@ export default function Dashboard() {
  
       const fracoes = fracoesRes.data || [];
       const quotas = quotasRes.data || [];
+     console.log('QUOTAS:', JSON.stringify(quotas.slice(0, 2)));
+console.log('currentMonth:', getFirstDayOfMonth());
       const administradores = adminRes.data || [];
  
       const currentMonth = getFirstDayOfMonth();
